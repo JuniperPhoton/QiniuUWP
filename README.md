@@ -7,3 +7,7 @@ The project is modified from [Official C# SDK](https://github.com/qiniu/csharp-s
 
 1. Config your key directly in Config.cs file.
 2. Plenty of methods now return Task<>, remember to await if you need.
+
+##License
+
+The project is released under MIT License.
