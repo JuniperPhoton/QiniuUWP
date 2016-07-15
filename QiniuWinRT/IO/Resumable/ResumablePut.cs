@@ -11,6 +11,7 @@ using Qiniu.RPC;
 using Qiniu.RS;
 using Qiniu.Util;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Qiniu.IO.Resumable
 {
@@ -71,12 +72,14 @@ namespace Qiniu.IO.Resumable
         /// <param name="upToken">上传Token</param>
         /// <param name="key">key</param>
         /// <param name="localFile">本地文件名</param>
-        public async Task<CallRet> PutFile(string upToken, string localFile, string key)
+        public async Task<CallRet> PutFile(string upToken, string localFile, string key,CancellationToken token)
         {
             if (!File.Exists(localFile))
             {
                 throw new Exception(string.Format("{0} does not exist", localFile));
             }
+
+            token.ThrowIfCancellationRequested();
             
             PutAuthClient client = new PutAuthClient(upToken);
             CallRet ret;
@@ -94,6 +97,9 @@ namespace Qiniu.IO.Resumable
                     }
                     fs.Seek((long)i * BLOCKSIZE, SeekOrigin.Begin);
                     fs.Read(byteBuf, 0, readLen);
+
+                    token.ThrowIfCancellationRequested();
+
                     BlkputRet blkRet = await ResumableBlockPut(client, byteBuf, i, readLen);
                     if (blkRet == null)
                     {
@@ -139,7 +145,6 @@ namespace Qiniu.IO.Resumable
                     {
                         throw ee;
                     }
-                    //TODO
                     //System.Threading.Thread.Sleep(1000);
                     continue;
                 }
@@ -149,7 +154,6 @@ namespace Qiniu.IO.Resumable
                     {
                         return null;
                     }
-                    //TODO
                     //System.Threading.Thread.Sleep(1000);
                     continue;
                 }
